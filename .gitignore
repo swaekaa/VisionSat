@@ -1,0 +1,34 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.so
+
+# Ignore virtual environments
+.env/
+.venv/
+*.conda/
+*.virtualenv/
+env/
+venv/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore VS Code settings
+.vscode/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore logs
+*.log
+
+# Ignore frontend dependencies (if using Node)
+frontend/gradcam-viz-app/node_modules/
+
+# Ignore test run folder
+testrun/
+
+# Ignore Git folders inside subfolders (removes nested repos)
+frontend/gradcam/.git/
