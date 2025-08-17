@@ -8,7 +8,8 @@ from model_loader import load_model
 from gradcam_utils import generate_gradcam_heatmap
 
 # Use safe path
-MODEL_PATH = os.path.abspath("C:/Users/Ekaansh/OneDrive/Desktop/AB/vs code/JS/projects/satelite/test 2/eurosat_resnet18.pth")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "eurosat_resnet18.pth")
 
 app = Flask(__name__)
 CORS(app, origins=["http://localhost:8080"])

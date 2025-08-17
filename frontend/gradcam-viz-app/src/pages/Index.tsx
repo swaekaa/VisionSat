@@ -8,26 +8,13 @@ import { ResultsDisplay } from "@/components/ResultsDisplay";
 import { Sparkles, Brain, Cpu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for demonstration
-const mockPredictions = [
-  { class: "Golden Retriever", confidence: 0.89, probability: 0.89 },
-  { class: "Labrador", confidence: 0.76, probability: 0.76 },
-  { class: "Beagle", confidence: 0.45, probability: 0.45 },
-];
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/gradcam";
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [predictions, setPredictions] = useState<any[]>([]);
-  const [gradcamImage, setGradcamImage] = useState<string>("");
+  const [gradcamImage, setGradcamImage] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
-
-  const handleImageSelect = (file: File) => {
-    setSelectedImage(file);
-    // Reset previous results
-    setPredictions([]);
-    setGradcamImage("");
-  };
 
   const handleAnalyze = async () => {
     if (!selectedImage) {
@@ -40,31 +27,54 @@ const Index = () => {
     }
 
     setIsAnalyzing(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setPredictions(mockPredictions);
-      // Mock GradCAM image (you would replace this with actual API response)
-      setGradcamImage(URL.createObjectURL(selectedImage));
-      setIsAnalyzing(false);
-      
-      toast({
-        title: "Analysis Complete",
-        description: "Image classification and GradCAM explanation generated successfully",
+    setGradcamImage(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("image", selectedImage);
+
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: formData,
       });
-    }, 3000);
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Server error");
+      }
+
+      const data = await response.json();
+      if (data.heatmap) {
+        setGradcamImage(`data:image/png;base64,${data.heatmap}`);
+        toast({
+          title: "Analysis Complete",
+          description: "GradCAM visualization generated successfully",
+        });
+      } else {
+        toast({
+          title: "No heatmap returned",
+          variant: "destructive",
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Analysis Failed",
+        description: err.message || "Network or server error",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Live Rotating Earth Background */}
       <RotatingEarth />
-      
-      {/* Gradient Overlays */}
+
       <div className="absolute inset-0 bg-gradient-to-br from-background/20 via-transparent to-background/30" />
       <div className="absolute top-0 left-0 w-96 h-96 bg-ai-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-ai-secondary/5 rounded-full blur-3xl" />
-      
+
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -77,7 +87,7 @@ const Index = () => {
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Advanced image classification with explainable AI. Upload your image, select a model, 
-            and discover both predictions and visual explanations through GradCAM.
+            and discover GradCAM visualizations.
           </p>
         </div>
 
@@ -86,13 +96,11 @@ const Index = () => {
           {/* Image Upload */}
           <div className="lg:col-span-2">
             <ImageUpload
-              onImageSelect={handleImageSelect}
-              selectedImage={selectedImage}
-              className="h-full"
+              onImageSelected={(file) => setSelectedImage(file)}
             />
           </div>
 
-          {/* Model Information & Controls */}
+          {/* Model Info & Analyze Button */}
           <div className="space-y-6">
             <ModelDisplay />
 
@@ -104,9 +112,9 @@ const Index = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Button 
-                  variant="ai" 
-                  size="lg" 
+                <Button
+                  variant="ai"
+                  size="lg"
                   className="w-full"
                   onClick={handleAnalyze}
                   disabled={!selectedImage || isAnalyzing}
@@ -123,38 +131,16 @@ const Index = () => {
                     </>
                   )}
                 </Button>
-                
-                <div className="mt-4 p-3 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-                  <p className="mb-1">
-                    <span className="font-medium">Model:</span> ResNet-50
-                  </p>
-                  <p>
-                    <span className="font-medium">Status:</span> {
-                      selectedImage ? "Ready to analyze" : "Waiting for image"
-                    }
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Results */}
+        {/* Results Display */}
         <ResultsDisplay
-          predictions={predictions}
-          gradcamImage={gradcamImage}
+          heatmap={gradcamImage || ""}  // <--- use 'heatmap' prop
           isLoading={isAnalyzing}
         />
-
-        {/* Footer */}
-        <footer className="mt-16 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-sm border border-ai-primary/20">
-            <Sparkles className="h-4 w-4 text-ai-primary" />
-            <span className="text-sm text-muted-foreground">
-              Powered by advanced neural networks and explainable AI
-            </span>
-          </div>
-        </footer>
       </div>
     </div>
   );
