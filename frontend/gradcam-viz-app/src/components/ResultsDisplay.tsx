@@ -5,23 +5,20 @@ import { Eye, Target, TrendingUp } from "lucide-react";
 
 interface Prediction {
   class: string;
-  confidence: number;
+  confidence: number; // 0 to 1
 }
 
 interface ResultsDisplayProps {
   heatmap?: string; // GradCAM image
+  predictions?: Prediction[]; // predictions from backend
   isLoading?: boolean;
 }
 
-export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ heatmap, isLoading }) => {
-  const predictions: Prediction[] = [
-    { class: "Golden Retriever", confidence: 0.89 },
-    { class: "Labrador", confidence: 0.76 },
-    { class: "Beagle", confidence: 0.45 },
-  ];
+export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ heatmap, predictions, isLoading }) => {
+  const displayPredictions: Prediction[] = predictions || [];
 
   // Show placeholder if nothing has been analyzed yet
-  if (!isLoading && !heatmap) {
+  if (!isLoading && !heatmap && displayPredictions.length === 0) {
     return (
       <Card className="text-center py-12 mt-8">
         <CardContent>
@@ -35,7 +32,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ heatmap, isLoadi
     );
   }
 
-  const showPredictions = isLoading || !!heatmap;
+  const showPredictions = isLoading || !!heatmap || displayPredictions.length > 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
@@ -50,7 +47,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ heatmap, isLoadi
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {predictions.map((p, i) => (
+              {displayPredictions.map((p, i) => (
                 <div
                   key={i}
                   className="p-4 rounded-lg bg-gradient-subtle border border-ai-primary/20"

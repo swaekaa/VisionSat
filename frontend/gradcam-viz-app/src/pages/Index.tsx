@@ -8,64 +8,59 @@ import { ResultsDisplay } from "@/components/ResultsDisplay";
 import { Sparkles, Brain, Cpu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/gradcam";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const GRADCAM_API_URL = `${API_BASE_URL}/gradcam`;
+const PREDICT_API_URL = `${API_BASE_URL}/predict`;
+
+interface Prediction {
+  class: string;
+  confidence: number;
+}
 
 const Index = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [gradcamImage, setGradcamImage] = useState<string | null>(null);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
 
   const handleAnalyze = async () => {
-    if (!selectedImage) {
-      toast({
-        title: "No Image Selected",
-        description: "Please upload an image to analyze",
-        variant: "destructive",
-      });
-      return;
+  if (!selectedImage) {
+    toast({ title: "No Image Selected", description: "Please upload an image to analyze", variant: "destructive" });
+    return;
+  }
+
+  setIsAnalyzing(true);
+  setGradcamImage(null);
+
+  try {
+    // 1. GradCAM request
+    const gradcamForm = new FormData();
+    gradcamForm.append("image", selectedImage);
+    const gradcamRes = await fetch(GRADCAM_API_URL, { method: "POST", body: gradcamForm });
+    const gradcamData = await gradcamRes.json();
+    if (gradcamData.heatmap) {
+      setGradcamImage(`data:image/png;base64,${gradcamData.heatmap}`);
     }
 
-    setIsAnalyzing(true);
-    setGradcamImage(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("image", selectedImage);
-
-      const response = await fetch(API_URL, {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Server error");
-      }
-
-      const data = await response.json();
-      if (data.heatmap) {
-        setGradcamImage(`data:image/png;base64,${data.heatmap}`);
-        toast({
-          title: "Analysis Complete",
-          description: "GradCAM visualization generated successfully",
-        });
-      } else {
-        toast({
-          title: "No heatmap returned",
-          variant: "destructive",
-        });
-      }
-    } catch (err: any) {
-      toast({
-        title: "Analysis Failed",
-        description: err.message || "Network or server error",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAnalyzing(false);
+    // 2. Prediction request (new FormData!)
+    const predictForm = new FormData();
+    predictForm.append("image", selectedImage);
+    const predictRes = await fetch(PREDICT_API_URL, { method: "POST", body: predictForm });
+    const predictData = await predictRes.json();
+    if (predictData.predictions) {
+      setPredictions(predictData.predictions);
+    } else {
+      throw new Error("No predictions returned");
     }
-  };
+
+    toast({ title: "Analysis Complete", description: "GradCAM and predictions generated successfully" });
+  } catch (err: any) {
+    toast({ title: "Analysis Failed", description: err.message || "Network or server error", variant: "destructive" });
+  } finally {
+    setIsAnalyzing(false);
+  }
+};
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -81,12 +76,12 @@ const Index = () => {
           <div className="flex items-center justify-center gap-3 mb-4">
             <Sparkles className="h-8 w-8 text-ai-primary" />
             <h1 className="text-4xl lg:text-6xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Ekaansh lodu
+              VisionSat
             </h1>
             <Brain className="h-8 w-8 text-ai-secondary" />
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Advanced image classification with explainable AI. Upload your image, select a model, 
+            Advanced image classification with explainable AI. Upload your image 
             and discover GradCAM visualizations.
           </p>
         </div>
@@ -95,9 +90,7 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* Image Upload */}
           <div className="lg:col-span-2">
-            <ImageUpload
-              onImageSelected={(file) => setSelectedImage(file)}
-            />
+            <ImageUpload onImageSelected={(file) => setSelectedImage(file)} />
           </div>
 
           {/* Model Info & Analyze Button */}
@@ -138,7 +131,8 @@ const Index = () => {
 
         {/* Results Display */}
         <ResultsDisplay
-          heatmap={gradcamImage || ""}  // <--- use 'heatmap' prop
+          heatmap={gradcamImage || ""}
+          predictions={predictions}
           isLoading={isAnalyzing}
         />
       </div>
