@@ -12,7 +12,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "eurosat_resnet18.pth")
 
 app = Flask(__name__)
-CORS(app, origins=["https://visionsat.vercel.app","http://localhost:8080"])
+CORS(app, origins=["https://vision-sat.vercel.app","http://localhost:8080"])
 
 # Load model once at startup, get device
 model, device = load_model(MODEL_PATH)
