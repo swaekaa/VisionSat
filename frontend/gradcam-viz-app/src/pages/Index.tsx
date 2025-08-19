@@ -8,7 +8,7 @@ import { ResultsDisplay } from "@/components/ResultsDisplay";
 import { Sparkles, Brain, Cpu } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const GRADCAM_API_URL = `${API_BASE_URL}/gradcam`;
 const PREDICT_API_URL = `${API_BASE_URL}/predict`;
 
