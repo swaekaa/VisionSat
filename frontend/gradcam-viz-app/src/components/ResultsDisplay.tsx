@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Eye, Target, TrendingUp } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 interface Prediction {
   class: string;
@@ -77,6 +78,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ heatmap, predict
       )}
 
       {/* GradCAM Panel */}
+      {/* GradCAM Panel */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -86,11 +88,22 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ heatmap, predict
         </CardHeader>
         <CardContent>
           {heatmap ? (
-            <img
-              src={heatmap}
-              alt="GradCAM Heatmap"
-              className="w-full aspect-square object-cover rounded-lg border border-ai-secondary/20"
-            />
+            <Dialog>
+              <DialogTrigger asChild>
+                <img
+                  src={heatmap}
+                  alt="GradCAM Heatmap"
+                  className="w-full aspect-square object-cover rounded-lg border border-ai-secondary/20 cursor-pointer hover:opacity-90 transition"
+                />
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl p-2">
+                <img
+                  src={heatmap}
+                  alt="Full GradCAM Heatmap"
+                  className="w-full h-auto rounded-lg"
+                />
+              </DialogContent>
+            </Dialog>
           ) : (
             <div className="aspect-square bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20 flex items-center justify-center">
               <div className="text-center">

@@ -47,6 +47,8 @@ def predict_endpoint():
         # ======== Preprocess image ========
         from PIL import Image
         import torchvision.transforms as transforms
+        import torch
+
         image = Image.open(image_file).convert("RGB")
         transform = transforms.Compose([
             transforms.Resize((64, 64)),   # match training size
@@ -56,10 +58,9 @@ def predict_endpoint():
                 std=[0.176, 0.176, 0.177]    # updated std
             )
         ])
-        input_tensor = transform(image).unsqueeze(0)
+        input_tensor = transform(image).unsqueeze(0).to(device)  # <-- move tensor to device
 
         # ======== Predict ========
-        import torch
         with torch.no_grad():
             outputs = model(input_tensor)
             probabilities = torch.nn.functional.softmax(outputs[0], dim=0)
