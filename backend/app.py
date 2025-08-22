@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
@@ -14,7 +13,7 @@ MODEL_PATH = os.path.join(BASE_DIR, "eurosat_resnet18.pth")
 app = Flask(__name__)
 CORS(app, origins=["https://vision-sat.vercel.app","http://localhost:8080"])
 
-# Load model once at startup, get device
+# Load model once at startup, get device (CPU only)
 model, device = load_model(MODEL_PATH)
 
 @app.route('/gradcam', methods=['POST'])
@@ -27,7 +26,6 @@ def gradcam_endpoint():
         if image_file.filename == '':
             return jsonify({"error": "No image selected"}), 400
 
-        # Generate Grad-CAM heatmap as base64 string
         img_base64 = generate_gradcam_heatmap(model, image_file, device)
         return jsonify({"heatmap": img_base64})
     except Exception as e:
@@ -47,19 +45,20 @@ def predict_endpoint():
         # ======== Preprocess image ========
         from PIL import Image
         import torchvision.transforms as transforms
+        import torch
+
         image = Image.open(image_file).convert("RGB")
         transform = transforms.Compose([
             transforms.Resize((64, 64)),   # match training size
             transforms.ToTensor(),
             transforms.Normalize(
-                mean=[0.344, 0.380, 0.408],  # updated mean
-                std=[0.176, 0.176, 0.177]    # updated std
+                mean=[0.344, 0.380, 0.408],
+                std=[0.176, 0.176, 0.177]
             )
         ])
-        input_tensor = transform(image).unsqueeze(0)
+        input_tensor = transform(image).unsqueeze(0).to(device)   # <--- ensure CPU
 
         # ======== Predict ========
-        import torch
         with torch.no_grad():
             outputs = model(input_tensor)
             probabilities = torch.nn.functional.softmax(outputs[0], dim=0)
@@ -79,10 +78,9 @@ def predict_endpoint():
         return jsonify({"predictions": predictions})
 
     except Exception as e:
-        import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 7860))  # <--- default to 7860
     app.run(host='0.0.0.0', port=port)
