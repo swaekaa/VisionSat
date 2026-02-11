@@ -16,7 +16,7 @@ export const ModelDisplay = () => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4" />
-              <span className="font-medium">ResNet-50</span>
+              <span className="font-medium">ResNet-18</span>
             </div>
             <Badge className="bg-green-500/20 text-green-400 border-green-500/30" variant="outline">
               Active
