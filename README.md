@@ -5,7 +5,7 @@
 
 VisionSat is an **explainable AI web app** that lets you:  
 - Upload an image 🖼️  
-- Classify it using **PyTorch (ResNet-50 by default)** 🧠  
+- Classify it using **PyTorch (ResNet-18 by default)** 🧠  
 - Generate a **Grad-CAM heatmap** 🔥 to visually explain predictions  
 - View results in a **modern React + TypeScript frontend** styled with **TailwindCSS + shadcn UI** 🎨  
 
@@ -13,7 +13,7 @@ VisionSat is an **explainable AI web app** that lets you:
 
 ## 🚀 Features
 - ✅ Upload an image (JPEG/PNG).  
-- ✅ Run classification with ResNet-50.  
+- ✅ Run classification with ResNet-18.  
 - ✅ Explain predictions with **Grad-CAM visualization**.  
 - ✅ Beautiful UI with **React + TailwindCSS + shadcn UI**.  
 - ✅ **FastAPI backend** for model inference + Grad-CAM generation.  
